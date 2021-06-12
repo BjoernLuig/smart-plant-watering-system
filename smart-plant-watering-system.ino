@@ -6,20 +6,17 @@
 #include "ESP32_MailClient.h"
 #include "time.h"
 
-// wifi settings
-#define ssid                  "Tardis"
-#define password              "k33pc4!m4ndc4!!th3d0ct0r"
+#include "secrets.h" // you need to make a file called "secrets.h" with the following secrets:
+//#define ssid                  "ssid"
+//#define password              "password"
+//#define emailSenderAccount    "emailSenderAccount"
+//#define emailSenderPassword   "emailSenderPassword"
+//#define emailRecipient        "emailRecipient"
+//#define smtpServer            "smtpServer"
+//#define smtpServerPort        465 //might need to be changed
 
 // time settings
-#define ntpServer             "pool.ntp.org"
-
-// email settings
-#define emailSenderAccount    "espwateringsystem@gmail.com"
-#define emailSenderPassword   "m=*EhPho%</^-m$5Dgj="
-#define emailRecipient        "bjoernluig@gmail.com"
-#define smtpServer            "smtp.gmail.com"
-#define smtpServerPort        465
-#define emailSubject          "ESP32 wateringsystem"
+#define ntpServer     "pool.ntp.org"
 
 // classes
 class Button {
@@ -37,7 +34,7 @@ class Sensor {
   public:
   int pin;
   int value;
-  int percent;
+  float percent;
   Sensor(int pin) {
     pinMode(pin, INPUT);
     this->pin = pin;
@@ -46,7 +43,7 @@ class Sensor {
   }
   int measure() {
     value = analogRead(pin);
-    this->percent = map(value, 4095, 0, 0, 100);
+    this->percent = (float)(value-4095) * 100 / (float)(-4095);
     return percent;
   }
 };
@@ -107,7 +104,7 @@ class Actuator {
 AsyncWebServer server(80);
 Preferences preferences;
 SMTPData smtpData;
-String dataString = "";
+String dataString = "time moisture1 moisture2 ligth ultrasonic\n";
 Button rebootButton(13);
 Sensor moistureSensor1(34);
 Sensor moistureSensor2(35);
@@ -411,7 +408,7 @@ void loop() {
     if(preferences.getInt("waterEmpty") and not(preferences.getInt("sentMail",0))) {
       smtpData.setSender("ESP32", emailSenderAccount);
       smtpData.setPriority("High");
-      smtpData.setSubject(emailSubject);
+      smtpData.setSubject("ESP32 wateringsystem");
       smtpData.setMessage("Wasserstand kritisch!<br>Ultrasonic Sensor: "
                           +String(ultrasonicSensor.distance)+" cm<br><br>Sent from <a href='http://"
                           +WiFi.localIP().toString()+"'>ESP32 wateringsystem</a>", true);
