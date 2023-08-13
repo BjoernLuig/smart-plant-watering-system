@@ -1,0 +1,5 @@
+- Mail problem beheben
+- Mail test über Button
+- rote LED blinken lassen
+- schönere Plots
+- lichtsensor entfernen
